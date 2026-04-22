@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: raw
+    database: STOCKMESH
+    schema: RAW
+    tables:
+      - name: fundamentals
+        description: "Raw company fundamentals snapshot from yfinance Ticker.info"
+        columns:
+          - name: ticker
+            tests: [not_null]
+
+models:
+  - name: stg_fundamentals
+    description: "Cleaned company fundamentals with normalized types"
+    columns:
+      - name: ticker
+        tests: [not_null, unique]
+
+  - name: mart_fundamentals
+    description: "Final fundamentals mart for scorecard use"
+    columns:
+      - name: ticker
+        tests: [not_null, unique]

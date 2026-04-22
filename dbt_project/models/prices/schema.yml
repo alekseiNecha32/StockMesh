@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: raw
+    database: STOCKMESH
+    schema: RAW
+    tables:
+      - name: prices
+        description: "Raw OHLCV price data loaded from yfinance Parquet files"
+        columns:
+          - name: ticker
+            tests: [not_null]
+          - name: date
+            tests: [not_null]
+
+models:
+  - name: stg_prices
+    description: "Cleaned and typed daily OHLCV prices"
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: date
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+
+  - name: mart_daily_returns
+    description: "Daily returns, 30-day rolling volatility, and cumulative return per ticker"
+    columns:
+      - name: ticker
+        tests: [not_null, accepted_values: {values: ["FITB", "KEY", "RF", "HBAN", "CFG", "MTB"]}]
+      - name: date
+        tests: [not_null]

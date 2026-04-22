@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: raw
+    database: STOCKMESH
+    schema: RAW
+    tables:
+      - name: news
+        description: "Raw news headlines from yfinance Ticker.news"
+        columns:
+          - name: uuid
+            tests: [not_null]
+          - name: ticker
+            tests: [not_null]
+
+models:
+  - name: stg_news
+    description: "Deduplicated and typed news headlines"
+    columns:
+      - name: uuid
+        tests: [not_null]
+      - name: ticker
+        tests: [not_null]
+
+  - name: mart_news_sentiment
+    description: "Aggregated keyword-based sentiment score per ticker"
+    columns:
+      - name: ticker
+        tests: [not_null, unique]

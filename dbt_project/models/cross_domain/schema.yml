@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: fitb_peer_scorecard
+    description: "FITB vs regional bank peers — unified scorecard joining prices, fundamentals, and news"
+    columns:
+      - name: ticker
+        tests: [not_null, unique]
+      - name: is_focus
+        description: "TRUE for FITB, FALSE for all peers"
+        tests: [not_null]

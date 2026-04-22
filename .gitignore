@@ -1,0 +1,13 @@
+.env
+data/
+__pycache__/
+*.pyc
+*.pyo
+.dbt/
+dbt_project/target/
+dbt_project/logs/
+dbt_project/dbt_packages/
+*.egg-info/
+.venv/
+venv/
+.DS_Store

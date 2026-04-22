@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  StockMesh AWS Infrastructure
+  Creates an S3 bucket for raw Parquet storage and an IAM user
+  with scoped S3 access for the ingestion pipeline.
+
+# ── Parameters ────────────────────────────────────────────────────────────────
+Parameters:
+  BucketName:
+    Type: String
+    Default: stockmesh-raw
+    Description: Name of the S3 bucket for raw Parquet files
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+    Description: Deployment environment
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+Resources:
+
+  # S3 Bucket — stores raw Parquet files from yfinance ingestion
+  StockMeshBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BucketName}-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldRawFiles
+            Status: Enabled
+            ExpirationInDays: 90
+            Prefix: prices/
+          - Id: DeleteOldFundamentals
+            Status: Enabled
+            ExpirationInDays: 90
+            Prefix: fundamentals/
+          - Id: DeleteOldNews
+            Status: Enabled
+            ExpirationInDays: 30
+            Prefix: news/
+      Tags:
+        - Key: Project
+          Value: StockMesh
+        - Key: Environment
+          Value: !Ref Environment
+
+  # IAM Policy — scoped to only this bucket, principle of least privilege
+  StockMeshS3Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: StockMeshS3Access
+      Description: Allows StockMesh ingestion pipeline to read/write raw Parquet files
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ListBucket
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:GetBucketLocation
+            Resource: !GetAtt StockMeshBucket.Arn
+          - Sid: ReadWriteObjects
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+            Resource: !Sub "${StockMeshBucket.Arn}/*"
+
+  # IAM User — dedicated service account for the pipeline
+  StockMeshUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: stockmesh-ingest
+      ManagedPolicyArns:
+        - !Ref StockMeshS3Policy
+      Tags:
+        - Key: Project
+          Value: StockMesh
+
+  # Access Key — credentials the Python scripts use
+  StockMeshAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref StockMeshUser
+
+# ── Outputs ───────────────────────────────────────────────────────────────────
+Outputs:
+  BucketName:
+    Description: S3 bucket name — add this to your .env as AWS_BUCKET
+    Value: !Ref StockMeshBucket
+    Export:
+      Name: StockMeshBucketName
+
+  BucketArn:
+    Description: S3 bucket ARN
+    Value: !GetAtt StockMeshBucket.Arn
+
+  AccessKeyId:
+    Description: IAM Access Key ID — add to .env as AWS_ACCESS_KEY_ID
+    Value: !Ref StockMeshAccessKey
+
+  SecretAccessKey:
+    Description: IAM Secret Access Key — add to .env as AWS_SECRET_ACCESS_KEY
+    Value: !GetAtt StockMeshAccessKey.SecretAccessKey
