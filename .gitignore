@@ -11,3 +11,4 @@ dbt_project/dbt_packages/
 .venv/
 venv/
 .DS_Store
+logs/
