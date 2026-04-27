@@ -50,7 +50,6 @@ def load_returns_history() -> pd.DataFrame:
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("StockMesh — Regional Bank Scorecard")
-st.caption("FITB (Fifth Third Bank) vs. peers: KEY · RF · HBAN · CFG · MTB")
 
 with st.expander("About this dashboard"):
     st.markdown("""
